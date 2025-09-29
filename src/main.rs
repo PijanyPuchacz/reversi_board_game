@@ -320,8 +320,7 @@ fn main() {
                                     //debug msg
                                     //println!("valid move, switching player");
                                     active_player = active_player.opposite();
-                                    avail_move = true;
-                                    break 'is_valid;
+                                    continue 'main_loop;
                                 }
                                 if intermediate_pieces_act > 0
                                     && checking_colour == active_player.to_char()
@@ -335,11 +334,11 @@ fn main() {
                     }
                 }
             }
-            println!(
-                "{} player has no valid move.",
-                active_player.opposite().to_char()
-            );
         }
+        println!(
+            "{} player has no valid move.",
+            active_player.opposite().to_char()
+        );
 
         //check for game-end state
         if !avail_move {
@@ -368,7 +367,8 @@ fn main() {
             std::process::exit(0);
         }
 
-        println!("position is {}{}", location.0, location.1);
+        //debug
+        //println!("position is {}{}", location.0, location.1);
     }
 }
 
