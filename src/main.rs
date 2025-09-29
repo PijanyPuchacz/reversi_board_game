@@ -127,6 +127,7 @@ fn main() {
         //if the input is NOT 2 chars long
         if input.chars().count() != 2 {
             println!("Invalid Move. Try again.");
+            print_gameboard(&game_board);
             continue;
         }
         //match chars to index values in game_board arr
@@ -144,6 +145,7 @@ fn main() {
                 'h' => location[iterator] = 7,
                 _ => {
                     println!("Invalid move. Try again.");
+                    print_gameboard(&game_board);
                     continue 'main_loop;
                 }
             }
@@ -155,6 +157,7 @@ fn main() {
         //check that location is '.'
         if game_board[location.0 as usize][location.1 as usize] != '.' {
             println!("Invalid move. Try again.");
+            print_gameboard(&game_board);
             continue 'main_loop;
         }
 
@@ -265,13 +268,14 @@ fn main() {
         //if move was not valid
         if !some_peices_changed {
             println!("Invalid move. Try again.");
+            print_gameboard(&game_board);
             continue 'main_loop;
         }
 
         print_gameboard(&game_board);
 
-        let mut avail_move_B = false; //store whether any player has an available move for game over check after
-        let mut avail_move_W = false;
+        let mut avail_move_b = false; //store whether any player has an available move for game over check after
+        let mut avail_move_w = false;
 
         //check for available valid player moves
         'valid: for row in 0..=7 {
@@ -326,16 +330,16 @@ fn main() {
                             },
                             '.' => {
                                 if intermediate_pieces > 0 && checking_colour == 'B' {
-                                    avail_move_B = true;
+                                    avail_move_b = true;
                                 }
                                 if intermediate_pieces > 0 && checking_colour == 'W' {
-                                    avail_move_W = true;
+                                    avail_move_w = true;
                                 }
-                                if 'B' == active_player.opposite().to_char() && avail_move_B {
+                                if 'B' == active_player.opposite().to_char() && avail_move_b {
                                     active_player = active_player.opposite();
                                     break 'valid;
                                 }
-                                if 'W' == active_player.opposite().to_char() && avail_move_W {
+                                if 'W' == active_player.opposite().to_char() && avail_move_w {
                                     active_player = active_player.opposite();
                                     break 'valid;
                                 }
@@ -355,7 +359,7 @@ fn main() {
         }
 
         //check for game-end state
-        if !avail_move_B && !avail_move_W {
+        if !avail_move_b && !avail_move_w {
             println!("{} player has no valid move.", active_player.to_char());
 
             //count scores
