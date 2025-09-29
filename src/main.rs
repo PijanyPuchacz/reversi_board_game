@@ -265,7 +265,7 @@ fn main() {
         let mut avail_move = false; //store whether any player has an available move for game over check after
 
         //check for valid player moves
-        'is_valid: for row in 0..=7 {
+        for row in 0..=7 {
             'opp_player_chk: for col in 0..=7 {
                 'dir_loop: for direction in ALL_DIRECTION {
                     //debug
