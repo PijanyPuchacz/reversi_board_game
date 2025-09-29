@@ -99,10 +99,10 @@ fn main() {
     //black starts game
     let mut active_player = ActivePlayer::B;
 
+    print_gameboard(&game_board);
+
     //start main game loop
     'main_loop: loop {
-        print_gameboard(&game_board);
-
         //get input
         let mut input = String::new();
         print!(
@@ -151,6 +151,12 @@ fn main() {
 
         let location = BoardLocation::new(location[0], location[1]);
         let mut some_peices_changed = false;
+
+        //check that location is '.'
+        if game_board[location.0 as usize][location.1 as usize] != '.' {
+            println!("Invalid move. Try again.");
+            continue 'main_loop;
+        }
 
         'dir_loop: for direction in ALL_DIRECTION {
             let mut is_valid = false;
@@ -262,24 +268,27 @@ fn main() {
             continue 'main_loop;
         }
 
-        let mut avail_move = false; //store whether any player has an available move for game over check after
+        print_gameboard(&game_board);
 
-        //check for valid player moves
-        for row in 0..=7 {
-            'opp_player_chk: for col in 0..=7 {
-                'dir_loop: for direction in ALL_DIRECTION {
+        let mut avail_move_B = false; //store whether any player has an available move for game over check after
+        let mut avail_move_W = false;
+
+        //check for available valid player moves
+        'valid: for row in 0..=7 {
+            'pos_chk: for col in 0..=7 {
+                'dir_loop2: for direction in ALL_DIRECTION {
                     //debug
                     //println!("{row}{col}{:?}", direction);
                     //if current location is '.' then move to next point
-                    if game_board[row][col] == '.' {
-                        continue 'opp_player_chk;
+
+                    let checking_colour = game_board[row][col];
+                    if checking_colour == '.' {
+                        continue 'pos_chk;
                     }
 
                     //reset location
-                    let checking_colour = game_board[row][col];
                     let mut check_location = BoardLocation::new(row as isize, col as isize);
-                    let mut intermediate_pieces_opp = 0;
-                    let mut intermediate_pieces_act = 0;
+                    let mut intermediate_pieces = 0;
 
                     //loop to check if the other side of the line has a '.' and intermediate pieces
                     loop {
@@ -294,55 +303,60 @@ fn main() {
                         {
                             //debug message
                             //println!("{row}{col} Out of bounds check: {:?}", direction);
-                            continue 'dir_loop;
+                            continue 'dir_loop2;
                         }
 
                         //check piece at location
                         match game_board[check_location.0 as usize][check_location.1 as usize] {
-                            'B' => match active_player.opposite() {
-                                ActivePlayer::W => intermediate_pieces_opp += 1,
-                                ActivePlayer::B => {
-                                    intermediate_pieces_act += 1;
+                            'B' => match checking_colour {
+                                'B' => continue 'dir_loop2, //not going to be valid in this direction
+                                'W' => {
+                                    intermediate_pieces += 1;
                                     continue;
                                 }
+                                _ => {}
                             },
-                            'W' => match active_player.opposite() {
-                                ActivePlayer::W => {
-                                    intermediate_pieces_act += 1;
+                            'W' => match checking_colour {
+                                'B' => {
+                                    intermediate_pieces += 1;
                                     continue;
                                 }
-                                ActivePlayer::B => intermediate_pieces_opp += 1,
+                                'W' => continue 'dir_loop2,
+                                _ => {}
                             },
                             '.' => {
-                                if intermediate_pieces_opp > 0
-                                    && checking_colour == active_player.opposite().to_char()
-                                {
-                                    //debug msg
-                                    //println!("valid move, switching player");
+                                if intermediate_pieces > 0 && checking_colour == 'B' {
+                                    avail_move_B = true;
+                                }
+                                if intermediate_pieces > 0 && checking_colour == 'W' {
+                                    avail_move_W = true;
+                                }
+                                if 'B' == active_player.opposite().to_char() && avail_move_B {
                                     active_player = active_player.opposite();
-                                    continue 'main_loop;
+                                    break 'valid;
                                 }
-                                if intermediate_pieces_act > 0
-                                    && checking_colour == active_player.to_char()
-                                {
-                                    avail_move = true;
+                                if 'W' == active_player.opposite().to_char() && avail_move_W {
+                                    active_player = active_player.opposite();
+                                    break 'valid;
                                 }
-                                continue 'dir_loop;
+                                continue 'dir_loop2;
                             }
                             _ => println!("nope, this is a bug"),
                         }
                     }
                 }
             }
+            if row == 7 {
+                println!(
+                    "{} player has no valid move.",
+                    active_player.opposite().to_char()
+                );
+            }
         }
-        println!(
-            "{} player has no valid move.",
-            active_player.opposite().to_char()
-        );
 
         //check for game-end state
-        if !avail_move {
-            print_gameboard(&game_board);
+        if !avail_move_B && !avail_move_W {
+            println!("{} player has no valid move.", active_player.to_char());
 
             //count scores
             let mut score: isize = 0;
@@ -360,7 +374,7 @@ fn main() {
             match score {
                 1.. => println!("Black wins by {} points!", score),
                 0 => println!("Draw!"),
-                ..0 => println!("White winds by {} points!", score.abs()),
+                ..0 => println!("White wins by {} points!", score.abs()),
             }
 
             //close program
@@ -375,11 +389,11 @@ fn main() {
 //prints the current board state
 fn print_gameboard(gm_brd: &[[char; 8]; 8]) {
     let chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    print!("  a  b  c  d  e  f  g  h ");
+    print!("  abcdefgh");
     for (i, row) in gm_brd.iter().enumerate() {
-        print!("\n{}", chars[i]);
+        print!("\n{} ", chars[i]);
         for column in row {
-            print!(" {column} ");
+            print!("{column}");
         }
     }
     print!("\n");
